@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} - Project Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>{{ project.name }}</h1>
+                <p class="text-muted">{{ project.description }}</p>
+            </div>
+            <div>
+                {% if user == project.owner %}
+                    <a href="{% url 'projects:invite_member' project.pk %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-user-plus"></i> Invite Member
+                    </a>
+                {% endif %}
+                <a href="{% url 'tasks:create' project.pk %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Task
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="kanban-column">
+            <h5 class="text-center mb-3">
+                <i class="fas fa-list"></i> To Do
+                <span class="badge bg-secondary">{{ todo_tasks.count }}</span>
+            </h5>
+            {% for task in todo_tasks %}
+                <div class="card mb-3 task-card priority-{{ task.priority }}" 
+                     onclick="location.href='{% url 'tasks:detail' task.pk %}'">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ task.title }}</h6>
+                        {% if task.assigned_to %}
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i> {{ task.assigned_to.username }}
+                            </small>
+                        {% endif %}
+                        <div class="mt-2">
+                            <span class="badge bg-{{ task.priority|yesno:'danger,warning,success' }}">
+                                {{ task.get_priority_display }}
+                            </span>
+                            {% if task.due_date %}
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-calendar"></i> {{ task.due_date|date:"M d" }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="kanban-column">
+            <h5 class="text-center mb-3">
+                <i class="fas fa-spinner"></i> In Progress
+                <span class="badge bg-warning">{{ in_progress_tasks.count }}</span>
+            </h5>
+            {% for task in in_progress_tasks %}
+                <div class="card mb-3 task-card priority-{{ task.priority }}" 
+                     onclick="location.href='{% url 'tasks:detail' task.pk %}'">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ task.title }}</h6>
+                        {% if task.assigned_to %}
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i> {{ task.assigned_to.username }}
+                            </small>
+                        {% endif %}
+                        <div class="mt-2">
+                            <span class="badge bg-{{ task.priority|yesno:'danger,warning,success' }}">
+                                {{ task.get_priority_display }}
+                            </span>
+                            {% if task.due_date %}
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-calendar"></i> {{ task.due_date|date:"M d" }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="kanban-column">
+            <h5 class="text-center mb-3">
+                <i class="fas fa-check"></i> Done
+                <span class="badge bg-success">{{ done_tasks.count }}</span>
+            </h5>
+            {% for task in done_tasks %}
+                <div class="card mb-3 task-card priority-{{ task.priority }}" 
+                     onclick="location.href='{% url 'tasks:detail' task.pk %}'">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ task.title }}</h6>
+                        {% if task.assigned_to %}
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i> {{ task.assigned_to.username }}
+                            </small>
+                        {% endif %}
+                        <div class="mt-2">
+                            <span class="badge bg-{{ task.priority|yesno:'danger,warning,success' }}">
+                                {{ task.get_priority_display }}
+                            </span>
+                            {% if task.due_date %}
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-calendar"></i> {{ task.due_date|date:"M d" }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // WebSocket connection for real-time updates
+    const projectId = {{ project.pk }};
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/project/' + projectId + '/'
+    );
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'task_update') {
+            // Reload the page to show updated task status
+            location.reload();
+        }
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+</script>
+{% endblock %}

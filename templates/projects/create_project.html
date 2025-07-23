@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Project - Project Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-plus"></i> Create New Project</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'projects:list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Project
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title"><i class="fas fa-lightbulb"></i> Project Tips</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Choose a clear, descriptive name for your project</li>
+                    <li><i class="fas fa-check text-success"></i> Add a detailed description to help team members understand the project goals</li>
+                    <li><i class="fas fa-check text-success"></i> Set the appropriate priority level based on project importance</li>
+                    <li><i class="fas fa-check text-success"></i> You can invite team members after creating the project</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

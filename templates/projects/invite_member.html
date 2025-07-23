@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Invite Member - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-user-plus"></i> Invite Member to {{ project.name }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'projects:detail' project.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Send Invitation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6><i class="fas fa-users"></i> Current Members</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ project.owner.username }}</strong>
+                            <small class="text-muted d-block">{{ project.owner.email }}</small>
+                        </div>
+                        <span class="badge bg-primary">Owner</span>
+                    </div>
+                    
+                    {% for member in project.members.all %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ member.username }}</strong>
+                                <small class="text-muted d-block">{{ member.email }}</small>
+                            </div>
+                            <span class="badge bg-secondary">Member</span>
+                        </div>
+                    {% empty %}
+                        {% if project.members.count == 0 %}
+                            <div class="list-group-item text-muted text-center">
+                                No additional members yet
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title"><i class="fas fa-info-circle"></i> Invitation Info</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Invited users will receive a notification</li>
+                    <li><i class="fas fa-check text-success"></i> They can accept the invitation from their dashboard</li>
+                    <li><i class="fas fa-check text-success"></i> Members can view and edit tasks in this project</li>
+                    <li><i class="fas fa-check text-success"></i> Only the project owner can invite new members</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ task.title }} - Project Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>{{ task.title }}</h4>
+                <div>
+                    <a href="{% url 'tasks:edit' task.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        <select class="form-select form-select-sm d-inline-block w-auto ms-2" 
+                                onchange="updateTaskStatus({{ task.pk }}, this.value)">
+                            <option value="todo" {% if task.status == 'todo' %}selected{% endif %}>To Do</option>
+                            <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                            <option value="done" {% if task.status == 'done' %}selected{% endif %}>Done</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Priority:</strong>
+                        <span class="badge bg-{{ task.priority|yesno:'danger,warning,success' }} ms-2">
+                            {{ task.get_priority_display }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Assigned to:</strong>
+                        {% if task.assigned_to %}
+                            <span class="ms-2">{{ task.assigned_to.username }}</span>
+                        {% else %}
+                            <span class="text-muted ms-2">Unassigned</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Due Date:</strong>
+                        {% if task.due_date %}
+                            <span class="ms-2">{{ task.due_date|date:"M d, Y H:i" }}</span>
+                        {% else %}
+                            <span class="text-muted ms-2">No due date</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if task.description %}
+                    <div class="mb-3">
+                        <strong>Description:</strong>
+                        <p class="mt-2">{{ task.description|linebreaks }}</p>
+                    </div>
+                {% endif %}
+                
+                <small class="text-muted">
+                    Created by {{ task.created_by.username }} on {{ task.created_at|date:"M d, Y H:i" }}
+                </small>
+            </div>
+        </div>
+        
+        <!-- Comments Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-comments"></i> Comments ({{ comments.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% for comment in comments %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <strong>{{ comment.author.username }}</strong>
+                            <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <p class="mt-2 mb-0">{{ comment.content|linebreaks }}</p>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">No comments yet.</p>
+                {% endfor %}
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    {{ comment_form|crispy }}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Add Comment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6>Project Info</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Project:</strong> {{ task.project.name }}</p>
+                <p><strong>Owner:</strong> {{ task.project.owner.username }}</p>
+                <p><strong>Members:</strong> {{ task.project.members.count|add:1 }}</p>
+                <a href="{% url 'projects:detail' task.project.pk %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Project
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateTaskStatus(taskId, newStatus) {
+    fetch(`/tasks/${taskId}/update-status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `status=${newStatus}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Send WebSocket message for real-time updates
+            if (window.chatSocket && window.chatSocket.readyState === WebSocket.OPEN) {
+                window.chatSocket.send(JSON.stringify({
+                    'type': 'task_update',
+                    'task_id': taskId,
+                    'status': newStatus
+                }));
+            }
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}

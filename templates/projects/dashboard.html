@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Project Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Dashboard</h1>
+            <a href="{% url 'projects:create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Project
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if pending_invitations %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-envelope"></i> Pending Invitations</h5>
+            {% for invitation in pending_invitations %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ invitation.inviter.username }} invited you to join "{{ invitation.project.name }}"</span>
+                    <a href="{% url 'projects:accept_invitation' invitation.id %}" class="btn btn-sm btn-success">Accept</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <h3>Your Projects</h3>
+        <div class="row">
+            {% for project in projects %}
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ project.name }}</h5>
+                            <p class="card-text">{{ project.description|truncatewords:20 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-users"></i> {{ project.members.count|add:1 }} members
+                                </small>
+                                <a href="{% url 'projects:detail' project.pk %}" class="btn btn-primary btn-sm">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                        <h4>No projects yet</h4>
+                        <p class="text-muted">Create your first project to get started!</p>
+                        <a href="{% url 'projects:create' %}" class="btn btn-primary">Create Project</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <h3>Recent Tasks</h3>
+        {% for task in recent_tasks %}
+            <div class="card mb-2 task-card priority-{{ task.priority }}">
+                <div class="card-body py-2">
+                    <h6 class="card-title mb-1">{{ task.title }}</h6>
+                    <small class="text-muted">{{ task.project.name }}</small>
+                    <div class="mt-1">
+                        <span class="badge bg-{{ task.status|yesno:'success,warning,secondary' }}">
+                            {{ task.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-muted">No recent tasks</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

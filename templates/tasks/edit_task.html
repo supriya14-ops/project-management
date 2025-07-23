@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Task - {{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-edit"></i> Edit Task: {{ task.title }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6><i class="fas fa-info-circle"></i> Task Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Project:</strong> {{ task.project.name }}</p>
+                        <p><strong>Created by:</strong> {{ task.created_by.username }}</p>
+                        <p><strong>Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Current Status:</strong> 
+                            <span class="badge bg-{{ task.status|yesno:'success,warning,secondary' }}">
+                                {{ task.get_status_display }}
+                            </span>
+                        </p>
+                        <p><strong>Priority:</strong> 
+                            <span class="badge bg-{{ task.priority|yesno:'danger,warning,success' }}">
+                                {{ task.get_priority_display }}
+                            </span>
+                        </p>
+                        <p><strong>Last Updated:</strong> {{ task.updated_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title"><i class="fas fa-lightbulb"></i> Editing Tips</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Changes will be saved immediately upon submission</li>
+                    <li><i class="fas fa-check text-success"></i> All project members will see the updated task</li>
+                    <li><i class="fas fa-check text-success"></i> Consider adding comments to explain significant changes</li>
+                    <li><i class="fas fa-check text-success"></i> You can change the assignee if needed</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
